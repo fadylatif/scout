@@ -1,0 +1,80 @@
+name: Scout System CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'unit/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    name: Backend Lint & Pytest
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: scout_test_db
+          POSTGRES_USER: scout_admin
+          POSTGRES_PASSWORD: scout_test_password
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 5
+
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system dependencies (WeasyPrint, Pango, libmagic)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmagic1 libpango-1.0-0 libcairo2 libgdk-pixbuf-2.0-0 shared-mime-info ffmpeg fonts-noto
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements/dev.txt
+
+      - name: Run Ruff Lint
+        run: ruff check backend
+
+      - name: Run Pytest Smoke & Unit Tests
+        env:
+          DATABASE_URL: postgres://scout_admin:scout_test_password@localhost:5432/scout_test_db
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: test-key-for-github-actions-only-2026
+        run: pytest
+
+  frontend-build:
+    name: Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck and Build
+        working-directory: frontend
+        run: npm run build

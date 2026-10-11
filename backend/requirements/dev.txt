@@ -1,0 +1,11 @@
+-r base.txt
+
+# Testing & Fixtures
+pytest>=8.3.3,<9.0
+pytest-django>=4.9.0,<5.0
+factory-boy>=3.3.1,<4.0
+coverage>=7.6.4,<8.0
+
+# Code Quality & Linting
+ruff>=0.7.0,<0.8
+pre-commit>=4.0.0,<5.0
