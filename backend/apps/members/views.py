@@ -235,16 +235,18 @@ class MemberExportExcelView(views.APIView):
 
 
 class MemberImportTemplateView(views.APIView):
-    """Download the import template Excel file."""
+    """Download the import template Excel file, optionally pre-filled with a team name."""
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        excel_bytes = generate_import_template()
+        team_name = request.query_params.get('team_name')
+        excel_bytes = generate_import_template(team_name=team_name)
         response = HttpResponse(
             excel_bytes,
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         )
-        response['Content-Disposition'] = 'attachment; filename="import_template.xlsx"'
+        filename = f'import_template_{team_name or "general"}.xlsx'
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
 

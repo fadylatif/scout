@@ -12,6 +12,7 @@ import { MembersPage } from './pages/members/MembersPage';
 import { MemberDetailPage } from './pages/members/MemberDetailPage';
 import { MemberImportPage } from './pages/members/MemberImportPage';
 import { StructurePage } from './pages/structure/StructurePage';
+import { UsersPage } from './pages/users/UsersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +42,7 @@ function AppRoutes() {
         <Route path="/members/import" element={<MemberImportPage />} />
         <Route path="/members/:id" element={<MemberDetailPage />} />
         <Route path="/structure" element={<StructurePage />} />
+        <Route path="/users" element={<UsersPage />} />
       </Route>
 
       {/* Redirects */}

@@ -28,12 +28,14 @@ export function MemberImportPage() {
   const [skipErrors, setSkipErrors] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [teamNameInput, setTeamNameInput] = useState('فريق النسور');
+
   const handleDownloadTemplate = async () => {
     try {
-      const res = await membersApi.importTemplate();
+      const res = await membersApi.importTemplate(teamNameInput);
       const url = URL.createObjectURL(res.data as Blob);
       const a = document.createElement('a');
-      a.href = url; a.download = 'import_template.xlsx'; a.click();
+      a.href = url; a.download = `import_template_${teamNameInput}.xlsx`; a.click();
       URL.revokeObjectURL(url);
     } catch (e) { console.error(e); }
   };
@@ -111,24 +113,36 @@ export function MemberImportPage() {
             <h3 className="text-xl font-bold">رفع ملف البيانات</h3>
             <p className="text-text-muted max-w-md">يرجى رفع ملف Excel يحتوي على بيانات الأفراد. يمكنك استخدام القالب المعتمد لضمان صحة البيانات.</p>
           </div>
-          <div className="flex gap-3">
-            <Button onClick={handleDownloadTemplate} variant="outline">
-              <Download className="w-4 h-4 ml-2" /> تحميل القالب
-            </Button>
-            <Button
-              disabled={loading}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {loading ? <Spinner className="w-4 h-4 ml-2" /> : <Upload className="w-4 h-4 ml-2" />}
-              {loading ? 'جاري التحليل...' : 'اختيار الملف'}
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".xlsx,.xls,.csv"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
+          <div className="space-y-4 w-full max-w-md">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1 text-right">اسم الفريق لتخصيص القالب:</label>
+              <input
+                type="text"
+                value={teamNameInput}
+                onChange={(e) => setTeamNameInput(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-surface-2 border border-border text-text-primary text-right"
+                placeholder="أدخل اسم الفريق..."
+              />
+            </div>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={handleDownloadTemplate} variant="outline">
+                <Download className="w-4 h-4 ml-2" /> تحميل القالب المخصص
+              </Button>
+              <Button
+                disabled={loading}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {loading ? <Spinner className="w-4 h-4 ml-2" /> : <Upload className="w-4 h-4 ml-2" />}
+                {loading ? 'جاري التحليل...' : 'اختيار الملف'}
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
           </div>
         </Card>
       )}

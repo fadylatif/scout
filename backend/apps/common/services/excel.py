@@ -93,8 +93,8 @@ def _normalize_arabic(text: str) -> str:
 
 # ─── Import template download ─────────────────────────────────────────────────
 
-def generate_import_template() -> bytes:
-    """Return a downloadable Excel template with Arabic headers + one example row."""
+def generate_import_template(team_name=None) -> bytes:
+    """Return a downloadable Excel template with Arabic headers + one example row, optionally pre-filled with a team name."""
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'قالب استيراد الأفراد'
@@ -117,7 +117,7 @@ def generate_import_template() -> bytes:
     example = [
         'مينا جرجس كامل', 'ذكر', '2010-05-15',
         '01012345678', '01123456789', 'شارع النصر، القاهرة',
-        '30005150100123', 'المجموعة البحرية', 'مرحلة الكشاف', 'فريق النسور',
+        '30005150100123', 'المجموعة البحرية', 'مرحلة الكشاف', team_name or 'فريق النسور',
         'رهط الصقور', '',
     ]
     ws.append(example)

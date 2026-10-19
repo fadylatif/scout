@@ -3,7 +3,8 @@ from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.core.management import call_command
 from rest_framework import status
 
 from .services.crypto import encrypt_bytes, decrypt_bytes
@@ -124,3 +125,15 @@ class SampleExcelExportView(APIView):
         )
         response['Content-Disposition'] = 'attachment; filename="scout_sample_members.xlsx"'
         return response
+
+
+class DemoDataDeleteView(APIView):
+    """Admin-only endpoint to delete all demo data."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not request.user.is_staff and request.user.role != 'ADMIN':
+            return Response({'detail': 'غير مصرح لك.'}, status=status.HTTP_403_FORBIDDEN)
+        call_command('delete_demo_data')
+        return Response({'detail': 'تم حذف بيانات الديمو بنجاح.'})
+

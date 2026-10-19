@@ -38,8 +38,11 @@ export const membersApi = {
   exportExcel: () =>
     api.get('/members/export/excel/', { responseType: 'blob' }),
 
-  importTemplate: () =>
-    api.get('/members/import/template/', { responseType: 'blob' }),
+  importTemplate: (teamName?: string) =>
+    api.get('/members/import/template/', {
+      params: teamName ? { team_name: teamName } : {},
+      responseType: 'blob'
+    }),
 
   importPreview: (file: File, mapping?: Record<string, string>) => {
     const fd = new FormData();
