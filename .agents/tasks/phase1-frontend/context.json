@@ -1,0 +1,26 @@
+{
+  "project_type": "React 18 + Vite 5 + TypeScript 5.6 + Tailwind CSS v3.4 SPA",
+  "language": "TypeScript strict",
+  "build_system": "Vite 5 with npm. Run from d:\\scout system\\frontend. vite.config.ts needs proxy added: /api → http://127.0.0.1:8000, /media → http://127.0.0.1:8000",
+  "test_framework": "No unit test framework currently — verification is via npm run build (tsc -b && vite build).",
+  "build_command": "cd frontend && npm run build",
+  "test_command": "cd frontend && npm run build",
+  "verification_instructions": "Run 'cd d:\\scout system\\frontend && npm run build' — must complete with 0 TypeScript errors and 0 Vite build errors.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "RTL direction is set globally in tokens.css (html { direction: rtl }). Do NOT use margin-left/right — use ms-/me- for RTL-safe spacing. No hardcoded hex colors — use CSS custom properties via Tailwind token classes (bg-surface, text-gold-400, etc). zustand is NOT yet installed — run 'npm install zustand@^4.5.5' first. All other dependencies (react-router-dom, recharts, axios, @tanstack/react-query, zod, react-hook-form, @radix-ui/*, lucide-react, class-variance-authority, clsx, tailwind-merge) are already installed.",
+  "contribution_requirements": "Use cva + cn pattern (see existing Button.tsx/Badge.tsx/Input.tsx). All colors via CSS vars from tokens.css. All forms use react-hook-form + zod. All API calls via api/client.ts axios instance. No TypeScript 'any' without justification. Use RTL-safe Tailwind utilities.",
+  "key_patterns": "Existing UI components (Button/Badge/Input) use cva from class-variance-authority + cn from lib/utils.ts. CSS custom properties defined in src/styles/tokens.css and mapped in tailwind.config.js. Sidebar layout uses CSS vars --sidebar-width/--sidebar-collapsed from tokens.css. Class 'layout-main' and 'sidebar-collapsed' defined in tokens.css. Font is Cairo (self-hosted, RTL Arabic). @radix-ui/* primitives are already installed for Dialog/Select/Tabs/Avatar/etc.",
+  "relevant_files": [
+    "frontend/src/components/ui/Button.tsx",
+    "frontend/src/components/ui/Badge.tsx",
+    "frontend/src/components/ui/Input.tsx",
+    "frontend/src/lib/utils.ts",
+    "frontend/src/styles/tokens.css",
+    "frontend/tailwind.config.js",
+    "frontend/package.json",
+    "frontend/src/App.tsx",
+    "frontend/src/main.tsx",
+    "frontend/src/index.css"
+  ],
+  "directory_structure": "frontend/src/components/ui/ — existing Button/Badge/Input + new Card/Table/Dialog/Select/Spinner/Pagination. frontend/src/components/layout/ — new Sidebar/Topbar/MainLayout. frontend/src/components/shared/ — new LoadingSpinner/EmptyState/ConfirmDialog/AvatarWithFallback. frontend/src/pages/ — auth/dashboard/members/structure/users. frontend/src/api/ — client/auth/members/structure/users. frontend/src/store/ — authStore. frontend/src/hooks/ — useAuth/usePermission/useDebounce/usePagination. frontend/src/types/ — index.ts. frontend/src/utils/ — formatDate/formatCode. frontend/src/styles/tokens.css — DO NOT MODIFY."
+}

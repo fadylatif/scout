@@ -9,3 +9,10 @@ def is_allowed_file_type(file_bytes: bytes, allowed_mimes: list[str]) -> tuple[b
     """Validates if the file content matches allowed MIME types."""
     detected = detect_mime_type(file_bytes)
     return (detected in allowed_mimes, detected)
+
+
+def validate_file_magic(file_obj) -> str:
+    """Read first 2048 bytes of a file-like object and return its MIME type."""
+    header = file_obj.read(2048)
+    file_obj.seek(0)
+    return detect_mime_type(header)

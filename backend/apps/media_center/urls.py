@@ -1,0 +1,11 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import MediaAlbumViewSet, MediaFileViewSet
+
+router = DefaultRouter()
+router.register(r'albums', MediaAlbumViewSet)
+router.register(r'files', MediaFileViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]

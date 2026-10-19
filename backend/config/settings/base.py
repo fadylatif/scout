@@ -47,6 +47,16 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'apps.common',
+    'apps.users',
+    'apps.structure',
+    'apps.members',
+    'apps.attendance',
+    'apps.activities',
+    'apps.advancement',
+    'apps.tasks',
+    'apps.approvals',
+    'apps.media_center',
+    'apps.reports',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -122,6 +132,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom user model
+AUTH_USER_MODEL = 'users.User'
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

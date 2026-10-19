@@ -1,0 +1,7 @@
+{
+  "task_id": "task-phase1-frontend",
+  "task_description": "Implement Phase 1 React frontend: TypeScript types, axios API layer, Zustand auth store, hooks, UI components (Card/Table/Dialog/Select/Spinner/Pagination), layout (Sidebar/Topbar/MainLayout), and pages (Login/Dashboard/Members list+detail+form/Structure/Users). Update App.tsx with React Router v6 routes. Add Vite proxy.",
+  "status": "pending",
+  "feature_order": ["FEAT-002"],
+  "blocked_reason": null
+}

@@ -45,3 +45,13 @@ def decrypt_file(input_path: str, output_path: str, custom_key: str = None) -> s
     with open(output_path, 'wb') as f_out:
         f_out.write(decrypted_data)
     return output_path
+
+
+def encrypt_text(text: str, custom_key: str = None) -> str:
+    """Encrypt a plain-text string and return base64-encoded ciphertext."""
+    return encrypt_bytes(text.encode('utf-8'), custom_key).decode('utf-8')
+
+
+def decrypt_text(token: str, custom_key: str = None) -> str:
+    """Decrypt a base64-encoded ciphertext string back to plain text."""
+    return decrypt_bytes(token.encode('utf-8'), custom_key).decode('utf-8')

@@ -1,0 +1,57 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Implement the complete Django backend for Phase 1: apps/users, apps/structure, apps/members — all models, migrations, serializers, views, URLs, and tests. Updates backend/config/settings/base.py (LOCAL_APPS + AUTH_USER_MODEL) and backend/config/urls.py.",
+  "status": "pending",
+  "steps": [
+    "1. Create backend/apps/users/__init__.py, apps.py (name='apps.users'), models.py with User (AbstractBaseUser+BaseUUIDModel+SoftDeleteModel, fields: username/full_name/email/phone/role ADMIN|LEADER|ASSISTANT/is_active/is_staff/last_login_ip/date_joined, USERNAME_FIELD='username', UserManager with create_user/create_superuser), PermissionTemplate (BaseUUIDModel+TimeStampedModel, name/permissions JSONField/description), UserPermission (BaseUUIDModel+TimeStampedModel, OneToOne→User, permissions JSONField, copied_from FK→PermissionTemplate null), UserSession (BaseUUIDModel, user FK, session_key unique/device_info/ip_address/created_at auto/last_activity auto_now/is_active), UserScopeAccess (BaseUUIDModel+TimeStampedModel, user FK, scope_type choices GROUP|STAGE|TEAM|PATROL, scope_id UUIDField, unique_together user+scope_type+scope_id). migrations/__init__.py.",
+
+    "2. Update backend/config/settings/base.py: add 'apps.users', 'apps.structure', 'apps.members' to LOCAL_APPS. Add AUTH_USER_MODEL = 'users.User' after DEFAULT_AUTO_FIELD line.",
+
+    "3. Create backend/apps/structure/__init__.py, apps.py (name='apps.structure'), models.py with ScoutYear (BaseUUIDModel+TimeStampedModel, name/start_date/end_date/is_active; override save() to set all other is_active=False when activating), Group (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, name/type SCOUT|GUIDE|NAVAL/description), Sector (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, name/group FK→Group PROTECT), Stage (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, name/group FK/order PositiveInt, Meta ordering=['order']), Team (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, name/stage FK→Stage PROTECT/sector FK→Sector null SET_NULL/leader FK→AUTH_USER_MODEL null SET_NULL related_name='led_teams'/description), Patrol (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, name/team FK→Team PROTECT/leader FK→AUTH_USER_MODEL null SET_NULL related_name='led_patrols'). migrations/__init__.py.",
+
+    "4. Create backend/apps/members/__init__.py, apps.py (name='apps.members'), models.py with Member (BaseUUIDModel+TimeStampedModel+SoftDeleteModel, full_name/date_of_birth DateField null/gender M|F/phone/guardian_phone/address TextField/national_id_encrypted TextField blank — stores Fernet-encrypted value/photo ImageField upload_to='members/photos/' null/group FK→Group null SET_NULL/stage FK→Stage null SET_NULL/team FK→Team null SET_NULL/patrol FK→Patrol null SET_NULL/scout_year FK→ScoutYear null SET_NULL/stage_code CharField max_length=30 unique null blank db_index/qr_image ImageField upload_to='members/qr/' null blank/is_active BooleanField default=True db_index; methods: generate_stage_code() produces SC-{year_last2}-{group_initial}-{seq:03d} by counting existing members in same stage+year+group and incrementing; generate_qr() calls generate_qr_png_bytes(str(self.id)) and saves to qr_image via ContentFile; override save(): if not stage_code call generate_stage_code(); if not qr_image call generate_qr()), MemberCodeHistory (BaseUUIDModel, member FK related_name='code_history'/old_code/stage FK null/changed_at auto_now_add/reason), CustomField (BaseUUIDModel+TimeStampedModel, name/field_type TEXT|NUMBER|DATE|BOOLEAN|SELECT/group FK null/required/options JSONField default=list), CustomFieldValue (BaseUUIDModel, member FK related_name='custom_values'/custom_field FK CASCADE/value TextField, unique_together member+custom_field), MemberTransferLog (BaseUUIDModel, member FK/from_team FK null '+' SET_NULL/to_team FK null '+' SET_NULL/from_stage FK null '+' SET_NULL/to_stage FK null '+' SET_NULL/transferred_at auto_now_add/reason/transferred_by FK→AUTH_USER_MODEL null SET_NULL). migrations/__init__.py.",
+
+    "5. Run migrations: .venv\\Scripts\\python.exe backend\\manage.py makemigrations users structure members then .venv\\Scripts\\python.exe backend\\manage.py migrate",
+
+    "6. Create backend/apps/users/permissions.py: BaseScopedPermission(BasePermission) with has_permission checking is_authenticated + permission JSON; helper is_admin(user); get_user_scope_ids(user, scope_type). Create backend/apps/users/mixins.py: AuditMixin with perform_create/perform_update/perform_destroy each calling AuditLog.objects.create() with appropriate AuditAction, entity_type from serializer.Meta.model.__name__, entity_id, old_values/new_values, user=request.user, ip_address from get_client_ip(request) helper reading HTTP_X_FORWARDED_FOR then REMOTE_ADDR.",
+
+    "7. Create backend/apps/users/serializers.py: UserSerializer (id/username/full_name/email/phone/role/is_active/date_joined, read_only id+date_joined), UserCreateSerializer (adds write_only password + write_only permission_template_id UUID optional; create() calls user.set_password(), then if template_id creates UserPermission copying template.permissions), PermissionTemplateSerializer (all fields), UserSessionSerializer (id/device_info/ip_address/created_at/last_activity/is_active), LoginSerializer (username+password write_only).",
+
+    "8. Create backend/apps/users/views.py: LoginView(APIView, AllowAny) — POST authenticate+check session count (UserSession.objects.filter(user=user, is_active=True).count() < settings.MAX_LEADER_SESSIONS OR user.role=='ADMIN'; if exceeded return 403 with detail message; else login(request,user)+create UserSession+AuditLog LOGIN); LogoutView(APIView) — POST deactivates current UserSession by session_key, calls logout(request), logs LOGOUT; MeView(APIView) — GET returns UserSerializer, PATCH updates full_name/email/phone; UserViewSet(AuditMixin, ModelViewSet) admin-only with extra action @action(methods=['post'], detail=True, url_path='assign_template') that copies template permissions to user's UserPermission; PermissionTemplateViewSet(AuditMixin, ModelViewSet) admin-only; UserSessionViewSet(ModelViewSet) list+destroy — non-admin sees only own sessions, admin sees all, destroy sets is_active=False and calls django session store delete.",
+
+    "9. Create backend/apps/users/urls.py: router with users/permission-templates/sessions + manual paths for auth/login, auth/logout, auth/me.",
+
+    "10. Create backend/apps/structure/serializers.py (6 serializers with read-only name fields for FKs), backend/apps/structure/filters.py (TeamFilter, PatrolFilter), backend/apps/structure/views.py (6 ViewSets each with AuditMixin, queryset=Model.objects.alive() or all_objects for ScoutYear, search+filter+ordering), backend/apps/structure/urls.py (DefaultRouter with 6 routes).",
+
+    "11. Create backend/apps/members/services/__init__.py, backend/apps/members/services/excel_import.py: parse_excel_import(file_bytes: bytes) -> dict reading xlsx with openpyxl, mapping rows to member fields, checking for duplicate stage_code against DB, returning {new:[...], update:[...], conflicts:[...]} WITHOUT saving; confirm_excel_import(parsed_data: dict, scout_year_id: str, user) -> int that creates/updates Member objects and logs AuditLog(IMPORT).",
+
+    "12. Create backend/apps/members/serializers.py (MemberListSerializer/MemberDetailSerializer/MemberCreateUpdateSerializer with national_id write-only encrypted in create/update/MemberTransferSerializer that creates MemberTransferLog+updates member FKs+saves old stage_code to MemberCodeHistory+generates new stage_code/CustomFieldSerializer/CustomFieldValueSerializer), backend/apps/members/filters.py (MemberFilter on group/stage/team/patrol/scout_year/gender/is_active/search=full_name+stage_code), backend/apps/members/views.py (MemberViewSet with actions: transfer/qr/import-preview/import-confirm/export; CustomFieldViewSet), backend/apps/members/urls.py.",
+
+    "13. Update backend/config/urls.py: add include for apps.users.urls, apps.structure.urls, apps.members.urls under 'api/' prefix. Add static(MEDIA_URL, document_root=MEDIA_ROOT).",
+
+    "14. Create backend/apps/users/tests/__init__.py + test_users.py (tests: login_success, login_wrong_password, session_limit_rejected, logout_clears_session, me_authenticated, me_unauthenticated, user_crud_admin_only, permission_template_independence). Create backend/apps/structure/tests/__init__.py + test_structure.py (tests: create_group, create_stage_order, soft_delete_team_hidden, active_scout_year_uniqueness). Create backend/apps/members/tests/__init__.py + test_members.py (tests: create_member_generates_stage_code, create_member_generates_qr, national_id_encrypted_at_rest, transfer_creates_log, excel_import_preview_no_save, excel_import_confirm_saves, export_xlsx, soft_delete_hidden).",
+
+    "15. Run full verification: .venv\\Scripts\\pytest.exe -v (all pass), .venv\\Scripts\\ruff.exe check backend (0 errors), .venv\\Scripts\\python.exe backend\\manage.py migrate (already applied). Set FEAT-001 status to 'completed' in this file and record findings."
+  ],
+  "acceptance_criteria": [
+    ".venv\\Scripts\\pytest.exe -v passes all tests including new users/structure/members tests",
+    ".venv\\Scripts\\ruff.exe check backend returns 0 errors",
+    ".venv\\Scripts\\python.exe backend\\manage.py migrate applies cleanly",
+    ".venv\\Scripts\\python.exe backend\\manage.py check returns no errors",
+    "AUTH_USER_MODEL = 'users.User' is set in base.py",
+    "All 3 new apps appear in .venv\\Scripts\\python.exe backend\\manage.py showmigrations",
+    "Member.national_id is never stored in plaintext — only national_id_encrypted exists in DB",
+    "POST /api/auth/login/ with valid credentials returns 200 and sets session cookie",
+    "Third login attempt returns 403",
+    "GET /api/members/ requires authentication — unauthenticated returns 403"
+  ],
+  "verification": [
+    ".venv\\Scripts\\pytest.exe -v",
+    ".venv\\Scripts\\ruff.exe check backend",
+    ".venv\\Scripts\\python.exe backend\\manage.py showmigrations users structure members",
+    ".venv\\Scripts\\python.exe backend\\manage.py check"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-phase1-backend",
+  "task_description": "Implement Phase 1 backend: apps/users (User model, sessions, permissions, audit), apps/structure (ScoutYear, Group, Sector, Stage, Team, Patrol), apps/members (Member, transfers, custom fields, Excel import/export, QR). Full DRF CRUD with migrations, serializers, views, URLs, tests.",
+  "status": "pending",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null
+}

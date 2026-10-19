@@ -1,0 +1,74 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement the complete React frontend for Phase 1. Depends on FEAT-001 (backend API must exist). Creates all TypeScript types, API layer, Zustand store, hooks, UI components, layout, and 7 pages. Replaces current Phase-0 App.tsx diagnostic UI with full React Router application.",
+  "status": "pending",
+  "steps": [
+    "1. Install zustand: run 'npm install zustand@^4.5.5' from d:\\scout system\\frontend.",
+
+    "2. Add Vite proxy to frontend/vite.config.ts — import defineConfig from 'vite' and @vitejs/plugin-react. Add server.proxy: { '/api': { target: 'http://127.0.0.1:8000', changeOrigin: true }, '/media': { target: 'http://127.0.0.1:8000', changeOrigin: true } }.",
+
+    "3. Create frontend/src/types/index.ts with strict TypeScript interfaces: User (id/username/full_name/email/phone/role:'ADMIN'|'LEADER'|'ASSISTANT'/is_active/date_joined), UserSession, PermissionTemplate, ScoutYear, Group (type:'SCOUT'|'GUIDE'|'NAVAL'), Sector, Stage, Team (with stage_name/leader_name string|null), Patrol (with team_name), MemberList (id/full_name/stage_code/group_name/stage_name/team_name/is_active), Member (extends MemberList + date_of_birth/gender/phone/guardian_phone/address/photo/qr_image/group/stage/team/patrol/scout_year all string|null + custom_values CustomFieldValue[]/transfers MemberTransfer[]), MemberTransfer, CustomField (field_type:'TEXT'|'NUMBER'|'DATE'|'BOOLEAN'|'SELECT'), CustomFieldValue, PaginatedResponse<T>, LoginCredentials, AuthState.",
+
+    "4. Create frontend/src/api/client.ts: axios instance with baseURL='http://127.0.0.1:8000' (absolute URL since no proxy guaranteed at build time), withCredentials:true. Add request interceptor to read 'csrftoken' cookie and set X-CSRFToken header for POST/PUT/PATCH/DELETE methods. Add response interceptor: on 401 status redirect to /login via window.location.href (only if not already on /login). Export as default.",
+
+    "5. Create frontend/src/api/auth.ts exporting authApi object: login(creds:LoginCredentials)→post /api/auth/login/, logout()→post /api/auth/logout/, me()→get /api/auth/me/, getSessions()→get /api/sessions/, deleteSession(id:string)→delete /api/sessions/{id}/.",
+
+    "6. Create frontend/src/api/structure.ts exporting structureApi: getGroups(), createGroup(data), updateGroup(id,data), deleteGroup(id), getSectors(groupId?), createSector(data), updateSector(id,data), deleteSector(id), getStages(groupId?), createStage(data), updateStage(id,data), deleteStage(id), getTeams(params?), createTeam(data), updateTeam(id,data), deleteTeam(id), getPatrols(teamId?), createPatrol(data), updatePatrol(id,data), deletePatrol(id), getScoutYears(). All return axios promises with typed PaginatedResponse<T> or T.",
+
+    "7. Create frontend/src/api/members.ts exporting membersApi: list(params?), get(id), create(data:FormData), update(id,data:FormData), delete(id), transfer(id,data), getQRUrl(id)→string (returns URL string not promise: '/api/members/{id}/qr/'), importPreview(file:File), importConfirm(data), export()→axios get with responseType:'blob'.",
+
+    "8. Create frontend/src/api/users.ts exporting usersApi: list(), create(data), update(id,data), delete(id), getTemplates(), createTemplate(data), updateTemplate(id,data), deleteTemplate(id), assignTemplate(userId,templateId).",
+
+    "9. Create frontend/src/store/authStore.ts: Zustand store with create(). State: user:User|null, isAuthenticated:boolean, isLoading:boolean. Actions: login(creds) calls authApi.login then authApi.me to get user object, sets user+isAuthenticated=true; logout() calls authApi.logout, clears user+isAuthenticated=false; fetchMe() sets isLoading=true, calls authApi.me → sets user+isAuthenticated=true on success, sets isAuthenticated=false on error, always sets isLoading=false.",
+
+    "10. Create frontend/src/hooks/useAuth.ts: re-exports { user, isAuthenticated, isLoading, login, logout } from useAuthStore(). Create frontend/src/hooks/usePermission.ts: returns { isAdmin: user?.role==='ADMIN' ?? false, canAccess: (perm:string)=>boolean checking user.permission JSON }. Create frontend/src/hooks/useDebounce.ts: generic hook useDebounce<T>(value:T, delay:number):T using useState+useEffect+setTimeout. Create frontend/src/hooks/usePagination.ts: returns { page, setPage, pageSize, setPageSize } with useState.",
+
+    "11. Create frontend/src/utils/formatDate.ts: formatDate(date:string|null):string using toLocaleDateString('ar-EG', {year:'numeric',month:'long',day:'numeric'}), returns 'غير محدد' for null. formatAge(dob:string|null):string calculates age in years, returns 'غير محدد' for null. Create frontend/src/utils/formatCode.ts: formatStageCode(code:string|null):string returns code or 'لا يوجد كود'.",
+
+    "12. Create new UI components in frontend/src/components/ui/: Card.tsx (Card/CardHeader/CardTitle/CardContent/CardFooter using bg-surface border-border rounded-xl), Table.tsx (Table/TableHeader/TableBody/TableRow/TableHead/TableCell with table-responsive wrapper and hover:bg-surface-2 on rows), Dialog.tsx (wraps @radix-ui/react-dialog: DialogRoot/DialogTrigger/DialogContent with bg-surface border-border shadow-lg rounded-2xl p-6, DialogHeader/DialogTitle/DialogDescription/DialogFooter), Select.tsx (wraps @radix-ui/react-select with RTL-safe styling matching Input.tsx pattern), Spinner.tsx (animated circle in gold-400, sizes sm/md/lg), Pagination.tsx (prev/next buttons + page number display using Button component, takes page/totalPages/onPageChange props).",
+
+    "13. Create frontend/src/components/layout/Sidebar.tsx: Props collapsed:boolean + onToggle:()=>void. Fixed position right side (RTL: right-0 inset-y-0). Width transitions between --sidebar-width and --sidebar-collapsed CSS vars. Top section: logo img src='/logo.png' + app name (hidden when collapsed). Middle: nav links using react-router-dom NavLink — Home→/dashboard (Home icon), Persons→/members (Users icon), Structure→/structure (Building2 icon), Users→/users (Shield icon, only shown when isAdmin). Each NavLink: flex items-center gap-3 p-3 rounded-lg hover:bg-surface-2, active class bg-surface-2 text-gold-400. Bottom: AvatarWithFallback (full_name) + user info (hidden when collapsed) + logout Button variant='ghost'.",
+
+    "14. Create frontend/src/components/layout/Topbar.tsx: Props onMenuToggle:()=>void. Fixed top, full width minus sidebar (margin-inline-start via CSS var). Height var(--topbar-height). bg-surface border-b border-border. Contains: hamburger Menu button (calls onMenuToggle), page title from useLocation pathname mapped to Arabic labels, user full_name badge on the left (RTL end).",
+
+    "15. Create frontend/src/components/layout/MainLayout.tsx: uses useState for collapsed sidebar. Renders Sidebar + Topbar + main content div with class 'layout-main' (and 'sidebar-collapsed' when collapsed). Uses Outlet from react-router-dom. Wraps with useEffect calling fetchMe on mount. If !isAuthenticated after loading: return Navigate to='/login'. Apply 'app-shell' class to root div for min-height.",
+
+    "16. Create frontend/src/components/shared/LoadingSpinner.tsx (full screen centered Spinner size='lg'). Create EmptyState.tsx (Props: title/description/action? — SVG inbox icon + text + optional Button). Create ConfirmDialog.tsx (wraps Dialog: title/description/onConfirm/onCancel/open/variant — confirms with Button variant='destructive' or 'primary'). Create AvatarWithFallback.tsx (wraps @radix-ui/react-avatar: shows image if src provided else first letter of name in gold-400 background).",
+
+    "17. Create frontend/src/pages/auth/LoginPage.tsx: full-screen bg-bg. Centered card bg-surface rounded-2xl p-8 max-w-sm w-full. Logo img + title in text-gold-400 + subtitle. react-hook-form with zod schema (username: z.string().min(1), password: z.string().min(1)). Two Input fields + Button loading={isSubmitting}. On error shows error message in text-error. On success navigate('/dashboard').",
+
+    "18. Create frontend/src/pages/dashboard/DashboardPage.tsx: uses @tanstack/react-query useQuery. Four StatCard components (local, bg-surface border-border p-5 rounded-xl): total members count, active teams count, active sessions count, role badge. Table of last 10 members (MemberList columns). Recharts BarChart showing member distribution by stage — data fetched from structureApi.getStages then membersApi.list filtered per stage. ResponsiveContainer width='100%' height={300}. Bar fill='var(--color-gold-400)'.",
+
+    "19. Create frontend/src/pages/members/MembersListPage.tsx: search Input (useDebounce 300ms), filter Selects (group/stage/gender), Table with columns: full_name/stage_code Badge gold/group_name/stage_name/team_name/is_active Badge success|error/actions (Eye/Edit/Trash icons as Button variant='ghost' size='icon-sm'). Pagination component at bottom. Action buttons row: 'إضافة فرد' Button primary navigate('/members/new'), 'تصدير Excel' Button secondary (downloads blob), 'استيراد Excel' Button outline (opens Dialog with 2-step flow: file upload→preview table→confirm button). Delete triggers ConfirmDialog. All data via useQuery with pagination params.",
+
+    "20. Create frontend/src/pages/members/MemberDetailPage.tsx: uses useParams id, useQuery for member data. Header: AvatarWithFallback (photo) large + full_name h1 + stage_code Badge. Tabs (@radix-ui/react-tabs): Tab1 'البيانات' — grid 2-col of labeled fields. Tab2 'الانتقالات' — Table of transfers. Tab3 'الحقول المخصصة' — list of custom_field_name: value pairs. Separate card with QR image: img src={membersApi.getQRUrl(id)} with download link. Edit button navigates to /members/:id/edit.",
+
+    "21. Create frontend/src/pages/members/MemberFormPage.tsx: useParams for optional id (edit mode vs create). react-hook-form zod schema: full_name required, gender required ('M'|'F'), date_of_birth optional, phone/guardian_phone/address optional, national_id optional string (displayed as password input), photo optional File. Dynamic Selects: groups→stages→teams→patrols (each loads based on parent selection). photo upload via input type='file' accept='image/*'. On submit: build FormData, call create or update, navigate to /members/:id on success.",
+
+    "22. Create frontend/src/pages/structure/StructurePage.tsx: useQuery for groups/stages/teams/patrols. Accordion-style tree: Groups at top level → click to expand showing Stages → click Stage to show Teams → click Team to show Patrols. Each level has inline 'إضافة' Button and Edit/Delete icons. Add/Edit opens Dialog with simple form (name field + parent FK Select). Delete uses ConfirmDialog. Uses @tanstack/react-query mutations for create/update/delete with invalidateQueries.",
+
+    "23. Create frontend/src/pages/users/UsersPage.tsx: guard — if !isAdmin return Navigate to='/dashboard'. Two sections: Users table (username/full_name/role Badge/is_active Badge/actions), Permission Templates table (name/description/actions). 'إضافة مستخدم' opens Dialog with full form (username/full_name/email/phone/role Select/password/permission_template Select optional). 'إضافة قالب' opens Dialog with name/description/permissions JSON textarea. Assign template action per user row.",
+
+    "24. Replace frontend/src/App.tsx entirely: import BrowserRouter/Routes/Route/Navigate from react-router-dom. Import useAuthStore. Import MainLayout, LoginPage, DashboardPage, MembersListPage, MemberDetailPage, MemberFormPage, StructurePage, UsersPage, LoadingSpinner. useEffect calls fetchMe() on mount. If isLoading return LoadingSpinner. Return BrowserRouter with routes: /login→LoginPage (no layout), rest wrapped in MainLayout Outlet: /dashboard/members/members/new/members/:id/members/:id/edit/structure/users. Root '/' redirects to /dashboard.",
+
+    "25. Run final build verification: cd d:\\scout system\\frontend && npm run build — must succeed with 0 TypeScript errors. Fix any type errors before marking complete. Set FEAT-002 status to 'completed'."
+  ],
+  "acceptance_criteria": [
+    "npm run build completes with 0 TypeScript errors and 0 Vite build errors",
+    "frontend/src/types/index.ts exports all required interfaces with no 'any'",
+    "frontend/src/store/authStore.ts uses zustand and exports useAuthStore hook",
+    "Sidebar shows correct navigation items and collapses/expands",
+    "LoginPage renders without runtime errors and submits to /api/auth/login/",
+    "MembersListPage has search/filter/pagination/export/import functionality wired",
+    "StructurePage shows hierarchical tree of groups→stages→teams→patrols",
+    "UsersPage is guarded and only accessible by ADMIN role",
+    "No hardcoded hex colors — all via Tailwind token classes from tailwind.config.js",
+    "All forms use react-hook-form + zod (no uncontrolled inputs for data fields)"
+  ],
+  "verification": [
+    "cd d:\\scout system\\frontend && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
