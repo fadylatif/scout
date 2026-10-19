@@ -18,6 +18,7 @@ urlpatterns = [
     # Users CRUD
     path('users/', views.UserListCreateView.as_view(), name='user-list'),
     path('users/<uuid:pk>/', views.UserDetailView.as_view(), name='user-detail'),
+    path('users/<uuid:pk>/reset-password/', views.UserResetPasswordView.as_view(), name='user-reset-password'),
 
     # Permission Templates
     path('permission-templates/', views.PermissionTemplateListCreateView.as_view(), name='template-list'),

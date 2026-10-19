@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Upload, FileText, CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Download, X } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, ArrowRight, ArrowLeft, Download } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -22,7 +22,6 @@ interface ImportRow {
 export function MemberImportPage() {
   const [step, setStep] = useState<ImportStep>('UPLOAD');
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [importResult, setImportResult] = useState<any>(null);
@@ -42,7 +41,6 @@ export function MemberImportPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = e.target.files?.[0];
     if (!uploadedFile) return;
-    setFile(uploadedFile);
     setLoading(true);
     try {
       const res = await membersApi.importPreview(uploadedFile);

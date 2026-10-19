@@ -193,6 +193,28 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             ip_address=_get_client_ip(self.request) or None,
         )
 
+class UserResetPasswordView(views.APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({'detail': 'المستخدم غير موجود.'}, status=status.HTTP_404_NOT_FOUND)
+
+        password = request.data.get('password')
+        if not password:
+            return Response({'detail': 'يجب تحديد كلمة المرور الجديدة.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(password)
+        user.save()
+        AuditLog.objects.create(
+            action='UPDATE', user=request.user, entity_type='User',
+            entity_id=str(user.pk), description=f'Reset password for {user}',
+            ip_address=_get_client_ip(request) or None,
+        )
+        return Response({'detail': 'تم تغيير كلمة المرور بنجاح.'})
+
 
 # ─── Permission Templates ──────────────────────────────────────────────────
 
