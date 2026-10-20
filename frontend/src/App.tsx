@@ -13,6 +13,9 @@ import { MemberDetailPage } from './pages/members/MemberDetailPage';
 import { MemberImportPage } from './pages/members/MemberImportPage';
 import { StructurePage } from './pages/structure/StructurePage';
 import { UsersPage } from './pages/users/UsersPage';
+import { AttendancePage } from './pages/attendance/AttendancePage';
+import { AttendanceSessionDetailPage } from './pages/attendance/AttendanceSessionDetailPage';
+import { ExcusesPage } from './pages/attendance/ExcusesPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,6 +44,9 @@ function AppRoutes() {
         <Route path="/members" element={<MembersPage />} />
         <Route path="/members/import" element={<MemberImportPage />} />
         <Route path="/members/:id" element={<MemberDetailPage />} />
+        <Route path="/attendance" element={<AttendancePage />} />
+        <Route path="/attendance/sessions/:id" element={<AttendanceSessionDetailPage />} />
+        <Route path="/attendance/excuses" element={<ExcusesPage />} />
         <Route path="/structure" element={<StructurePage />} />
         <Route path="/users" element={<UsersPage />} />
       </Route>

@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from .models import ApprovalRequest, ApprovalAction, ApprovalStatus
@@ -23,8 +24,8 @@ class ApprovalRequestViewSet(viewsets.ModelViewSet):
 
         # Leaders see requests that need their approval or requests they submitted
         return ApprovalRequest.objects.filter(
-            models.Q(requester=user) |
-            models.Q(status=ApprovalStatus.PENDING)
+            Q(requester=user) |
+            Q(status=ApprovalStatus.PENDING)
         ).distinct()
 
     def perform_create(self, serializer):

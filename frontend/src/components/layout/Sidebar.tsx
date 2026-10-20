@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Building2,
+  ClipboardCheck,
   UserCog,
   LogOut,
   ChevronRight,
@@ -22,6 +23,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'لوحة التحكم', to: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { label: 'الأفراد', to: '/members', icon: <Users className="w-5 h-5" /> },
+  { label: 'الحضور والغياب', to: '/attendance', icon: <ClipboardCheck className="w-5 h-5" /> },
   { label: 'الهيكل التنظيمي', to: '/structure', icon: <Building2 className="w-5 h-5" /> },
   { label: 'إدارة المستخدمين', to: '/users', icon: <UserCog className="w-5 h-5" />, adminOnly: true },
 ];

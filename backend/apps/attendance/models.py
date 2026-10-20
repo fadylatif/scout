@@ -76,6 +76,11 @@ class AttendanceRecord(BaseUUIDModel, SoftDeleteModel):
     def __str__(self):
         return f"{self.member} - {self.session} ({self.get_status_display()})"
 
+class ExcuseStatus(models.TextChoices):
+    PENDING = 'PENDING', 'قيد الانتظار'
+    APPROVED = 'APPROVED', 'معتمد'
+    REJECTED = 'REJECTED', 'مرفوض'
+
 class AttendanceExcuse(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
     """
     إدارة الأعذار المقدمة للغياب
@@ -93,7 +98,14 @@ class AttendanceExcuse(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
         blank=True,
         verbose_name="مستند العذر"
     )
+    status = models.CharField(
+        max_length=20,
+        choices=ExcuseStatus.choices,
+        default=ExcuseStatus.PENDING,
+        verbose_name="حالة العذر"
+    )
     is_approved = models.BooleanField(default=False, verbose_name="هل تم الاعتماد؟")
+    rejection_reason = models.TextField(blank=True, verbose_name="سبب الرفض")
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
