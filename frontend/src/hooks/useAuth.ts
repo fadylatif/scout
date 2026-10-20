@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import type { User } from '../types';
+import { authApi } from '../api/auth';
 
 export function useAuthState() {
   const [user, setUserState] = useState<User | null>(() => {
@@ -23,6 +24,18 @@ export function useAuthState() {
   const logout = useCallback(() => {
     setUser(null);
   }, [setUser]);
+
+  useEffect(() => {
+    if (user) {
+      authApi.me().then((res) => {
+        setUser(res.data);
+      }).catch((err: any) => {
+        if (err.response?.status === 401) {
+          logout();
+        }
+      });
+    }
+  }, []);
 
   return {
     user,

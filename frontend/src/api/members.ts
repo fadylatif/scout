@@ -20,14 +20,10 @@ export const membersApi = {
     api.get<Member>(`/members/${id}/`),
 
   create: (data: FormData) =>
-    api.post<Member>('/members/', data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.post<Member>('/members/', data),
 
   update: (id: string, data: FormData) =>
-    api.patch<Member>(`/members/${id}/`, data, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.patch<Member>(`/members/${id}/`, data),
 
   delete: (id: string) =>
     api.delete(`/members/${id}/`),
@@ -48,9 +44,7 @@ export const membersApi = {
     const fd = new FormData();
     fd.append('file', file);
     if (mapping) fd.append('mapping', JSON.stringify(mapping));
-    return api.post('/members/import/preview/', fd, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    return api.post('/members/import/preview/', fd);
   },
 
   importConfirm: (rows: any[], skipErrors: boolean = true) =>

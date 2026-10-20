@@ -59,6 +59,8 @@ class LoginView(views.APIView):
             )
 
         login(request, user)
+        from django.middleware.csrf import get_token
+        get_token(request)
 
         ip = _get_client_ip(request)
         device = _get_device_info(request)
