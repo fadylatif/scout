@@ -115,10 +115,10 @@ def generate_import_template(team_name=None) -> bytes:
         c.border = THIN_BORDER
 
     example = [
-        'مينا جرجس كامل', 'ذكر', '2010-05-15',
+        'مينا جرجس كامل', 'ذكر', '2012-05-15',
         '01012345678', '01123456789', 'شارع النصر، القاهرة',
-        '30005150100123', 'المجموعة البحرية', 'مرحلة الكشاف', team_name or 'فريق النسور',
-        'رهط الصقور', '',
+        '30205150100123', 'المجموعة البحرية', 'مرحلة الأشبال والزهرات', team_name or 'فريق الأشبال',
+        'رهط النسور', '',
     ]
     ws.append(example)
     for i, _ in enumerate(example, 1):
@@ -131,6 +131,49 @@ def generate_import_template(team_name=None) -> bytes:
         ws.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(max_len + 4, 16)
 
     ws.row_dimensions[1].height = 40
+
+    # ─── Sheet 2: دليل المراحل والفرق المعتمدة ────────────────────────────────
+    ws_guide = wb.create_sheet(title='دليل المراحل والفرق')
+    ws_guide.sheet_view.rightToLeft = True
+
+    guide_headers = ['الترتيب العمري', 'المرحلة', 'الفريق المعتمد', 'الجنس المسموح', 'المجموعة التابعة']
+    ws_guide.append(guide_headers)
+    for i, _ in enumerate(guide_headers, 1):
+        c = ws_guide.cell(row=1, column=i)
+        c.fill = GREEN_FILL
+        c.font = HEADER_FONT
+        c.alignment = ALIGN_CENTER
+        c.border = THIN_BORDER
+
+    guide_rows = [
+        ['1 (الأصغر)', 'مرحلة السنافر', 'فريق السنافر', 'بنين وبنات (مختلط)', 'المجموعة البحرية / مجموعة المرشدات'],
+        ['2', 'مرحلة البراعم', 'فريق البراعم', 'بنين وبنات (مختلط)', 'المجموعة البحرية / مجموعة المرشدات'],
+        ['3', 'مرحلة الأشبال والزهرات', 'فريق الأشبال', 'أولاد فقط (ذكور)', 'المجموعة البحرية'],
+        ['3', 'مرحلة الأشبال والزهرات', 'فريق الزهرات', 'بنات فقط (إناث)', 'مجموعة المرشدات'],
+        ['4', 'مرحلة الكشافة والمرشدات', 'فريق الكشافة', 'أولاد فقط (ذكور)', 'المجموعة البحرية'],
+        ['4', 'مرحلة الكشافة والمرشدات', 'فريق المرشدات', 'بنات فقط (إناث)', 'مجموعة المرشدات'],
+        ['5', 'مرحلة المتقدم والرائدات', 'فريق الكشاف المتقدم', 'أولاد فقط (ذكور)', 'المجموعة البحرية'],
+        ['5', 'مرحلة المتقدم والرائدات', 'فريق الرائدات', 'بنات فقط (إناث)', 'مجموعة المرشدات'],
+        ['6', 'مرحلة الجوالة والجوالات', 'فريق الجوالة', 'أولاد فقط (ذكور)', 'المجموعة البحرية'],
+        ['6', 'مرحلة الجوالة والجوالات', 'فريق الجوالات', 'بنات فقط (إناث)', 'مجموعة المرشدات'],
+        ['7', 'مرحلة إعداد القادة', 'فريق إعداد القادة', 'بنين وبنات', 'المجموعة البحرية / مجموعة المرشدات'],
+        ['8 (الأكبر)', 'مرحلة القادة', 'فريق القادة', 'بنين وبنات (قادة وقائدات)', 'المجموعة البحرية / مجموعة المرشدات'],
+    ]
+
+    for row_idx, r_data in enumerate(guide_rows, start=2):
+        ws_guide.append(r_data)
+        for col_idx in range(1, len(r_data) + 1):
+            c = ws_guide.cell(row=row_idx, column=col_idx)
+            c.alignment = ALIGN_CENTER if col_idx in (1, 4) else ALIGN_RIGHT
+            c.border = THIN_BORDER
+            if 'أولاد فقط' in str(c.value):
+                c.fill = PatternFill(start_color="E6F0FA", end_color="E6F0FA", fill_type="solid")
+            elif 'بنات فقط' in str(c.value):
+                c.fill = PatternFill(start_color="FAE6F0", end_color="FAE6F0", fill_type="solid")
+
+    for col in ws_guide.columns:
+        max_len = max((len(str(c.value or '').split('\n')[0]) for c in col), default=12)
+        ws_guide.column_dimensions[openpyxl.utils.get_column_letter(col[0].column)].width = max(max_len + 4, 18)
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -376,6 +419,14 @@ def parse_members_excel(file_obj, custom_mapping: dict | None = None) -> list:
                 resolved['team'] = str(team_obj.pk)
             else:
                 errors.append(f'الفريق "{team_raw}" غير موجود في النظام')
+
+        # ── Gender vs Team compatibility ─────────────────────────────────
+        team_check_name = team_raw or (team_obj.name if team_obj else '')
+        if team_check_name and gender:
+            from apps.structure.constants import validate_team_gender_compatibility
+            is_valid, msg = validate_team_gender_compatibility(team_check_name, gender)
+            if not is_valid:
+                errors.append(msg)
 
         patrol_raw = raw.get('patrol', '')
         if patrol_raw:

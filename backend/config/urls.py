@@ -14,6 +14,13 @@ urlpatterns = [
     path('api/', include('apps.members.urls')),
     path('api/attendance/', include('apps.attendance.urls')),
 
+    # Feature apps
+    path('api/activities/', include('apps.activities.urls')),
+    path('api/advancement/', include('apps.advancement.urls')),
+    path('api/tasks/', include('apps.tasks.urls')),
+    path('api/media/', include('apps.media_center.urls')),
+    path('api/reports/', include('apps.reports.urls')),
+
     # API Documentation (OpenAPI / Swagger)
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

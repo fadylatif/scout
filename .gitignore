@@ -54,7 +54,6 @@ yarn-error.log*
 # Static & Media files
 backend/staticfiles/
 backend/media/
-media/
 staticfiles/
 *.sqlite3
 *.db

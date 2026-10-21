@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from apps.common.models import BaseUUIDModel, TimeStampedModel, SoftDeleteModel
 
+
 class ActivityType(models.TextChoices):
     MEETING = 'MEETING', 'اجتماع دوري'
     CAMP = 'CAMP', 'مخيم'
@@ -9,16 +10,16 @@ class ActivityType(models.TextChoices):
     EVENT = 'EVENT', 'حدث عام'
     TRAINING = 'TRAINING', 'تدريب'
 
+
 class RecurrenceFrequency(models.TextChoices):
     DAILY = 'DAILY', 'يومي'
     WEEKLY = 'WEEKLY', 'أسبوعي'
     MONTHLY = 'MONTHLY', 'شهري'
     YEARLY = 'YEARLY', 'سنوي'
 
+
 class ActivityLocation(BaseUUIDModel, TimeStampedModel):
-    """
-    سجل المواقع المتزامنة
-    """
+    """سجل المواقع المتزامنة"""
     name = models.CharField(max_length=255, verbose_name="اسم الموقع")
     address = models.TextField(blank=True, null=True, verbose_name="العنوان")
     coordinates = models.CharField(max_length=100, blank=True, null=True, verbose_name="إحداثيات GPS")
@@ -31,10 +32,9 @@ class ActivityLocation(BaseUUIDModel, TimeStampedModel):
     def __str__(self):
         return self.name
 
+
 class Activity(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
-    """
-    النشاط الأساسي أو القاعدة للأنشطة المتكررة
-    """
+    """النشاط الأساسي أو القاعدة للأنشطة المتكررة"""
     title = models.CharField(max_length=255, verbose_name="عنوان النشاط")
     description = models.TextField(blank=True, verbose_name="الوصف")
     activity_type = models.CharField(
@@ -51,8 +51,15 @@ class Activity(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
         related_name='activities',
         verbose_name="الموقع"
     )
+    # الفرق المشاركة (متعدد — نشاط واحد لفرق متعددة)
+    teams = models.ManyToManyField(
+        'structure.Team',
+        blank=True,
+        related_name='activities',
+        verbose_name="الفرق المشاركة"
+    )
 
-    # Recurrence Settings
+    # إعدادات التكرار
     is_recurring = models.BooleanField(default=False, verbose_name="هل هو نشاط متكرر؟")
     frequency = models.CharField(
         max_length=20,
@@ -64,7 +71,7 @@ class Activity(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
     recurrence_day = models.IntegerField(
         null=True,
         blank=True,
-        verbose_name="يوم التكرار (1-7)"
+        verbose_name="يوم التكرار (0=الأحد ... 6=السبت)"
     )
     start_date = models.DateTimeField(verbose_name="تاريخ البدء")
     end_date = models.DateTimeField(null=True, blank=True, verbose_name="تاريخ الانتهاء")
@@ -85,10 +92,9 @@ class Activity(BaseUUIDModel, TimeStampedModel, SoftDeleteModel):
     def __str__(self):
         return f"{self.title} ({self.get_activity_type_display()})"
 
+
 class ActivityInstance(BaseUUIDModel, TimeStampedModel):
-    """
-    نسخة فعلية من النشاط (إما نشاط فردي أو نسخة من نشاط متكرر)
-    """
+    """نسخة فعلية من النشاط (نشاط فردي أو نسخة من نشاط متكرر)"""
     activity = models.ForeignKey(
         Activity,
         on_delete=models.CASCADE,
@@ -98,11 +104,13 @@ class ActivityInstance(BaseUUIDModel, TimeStampedModel):
     start_time = models.DateTimeField(verbose_name="وقت البدء")
     end_time = models.DateTimeField(verbose_name="وقت الانتهاء")
     is_cancelled = models.BooleanField(default=False, verbose_name="ملغى؟")
+    cancel_reason = models.TextField(blank=True, verbose_name="سبب الإلغاء")
     notes = models.TextField(blank=True, verbose_name="ملاحظات خاصة بهذه النسخة")
 
     class Meta:
         verbose_name = "نسخة نشاط"
         verbose_name_plural = "نسخ الأنشطة"
+        ordering = ['start_time']
 
     def __str__(self):
         return f"{self.activity.title} - {self.start_time.strftime('%Y-%m-%d')}"
